@@ -16,9 +16,18 @@ class Farmscribe:
 
     def application_creation(self):
         return Seq([
-            Assert(Txn.application_args.length() == Int(5)),
-            Assert(Txn.note() == Bytes("farmers:uv3")),
-            Assert(Btoi(Txn.application_args[3]) > Int(0)),
+            # checks if input data in application_args contain only valid/non-empty values
+            Assert(
+                And(    
+                    Txn.application_args.length() == Int(5),
+                    Txn.note() == Bytes("farmers:uv3"),
+                    Btoi(Txn.application_args[3]) > Int(0),
+                    Len(Txn.application_args[0]) > Int(0),
+                    Len(Txn.application_args[1]) > Int(0),
+                    Len(Txn.application_args[2]) > Int(0),
+                    Btoi(Txn.application_args[4]) > Int(0), 
+                )
+            ),
             App.globalPut(self.Variables.name, Txn.application_args[0]),
             App.globalPut(self.Variables.description, Txn.application_args[1]),
             App.globalPut(self.Variables.image, Txn.application_args[2]),
@@ -29,14 +38,21 @@ class Farmscribe:
             App.globalPut(self.Variables.owner, Txn.sender()),
             Approve()
         ])
-
+    # allow users to buy a product
+    # users have to define the quantity they want to buy
     def buy(self):
         quantity = Txn.application_args[2]
         return Seq([
             Assert(
+                # checks if quantity is a valid number
+                # checks if there is enough products in stock to fulfill order
+                # checks if sender is not the owner of the product
                 And(
                     Global.group_size() == Int(2),
                     Txn.application_args.length() == Int(3),
+                    Btoi(quantity) > Int(0),
+                    App.globalGet(self.Variables.owner) != Txn.sender(),
+                    App.globalGet(self.Variables.quantity) >= Btoi(quantity),
                 ),
             ),
             Assert(
@@ -55,16 +71,20 @@ class Farmscribe:
             Approve()
         ])
 
+    # allow products' owners to edit/update the quantity amount of their product
     def edit(self):
         quantity = Txn.application_args[2]
         return Seq([
+            # checks if sender is the product's owner
+            # checks if quantity is valid
             Assert(
                 And(
                     Global.group_size() == Int(1),
                     Txn.application_args.length() == Int(3),
+                    Btoi(quantity) > Int(0),
+                    App.globalGet(self.Variables.owner) == Txn.sender(),
                 ),
             ),
-
 
             App.globalPut(self.Variables.quantity, Btoi(quantity)),
             Approve()

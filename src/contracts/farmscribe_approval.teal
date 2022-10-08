@@ -24,6 +24,16 @@ txn NumAppArgs
 int 3
 ==
 &&
+txna ApplicationArgs 2
+btoi
+int 0
+>
+&&
+byte "OWNER"
+app_global_get
+txn Sender
+==
+&&
 assert
 byte "QUANTITY"
 txna ApplicationArgs 2
@@ -38,6 +48,22 @@ int 2
 txn NumAppArgs
 int 3
 ==
+&&
+txna ApplicationArgs 2
+btoi
+int 0
+>
+&&
+byte "OWNER"
+app_global_get
+txn Sender
+!=
+&&
+byte "QUANTITY"
+app_global_get
+txna ApplicationArgs 2
+btoi
+>=
 &&
 assert
 gtxn 1 TypeEnum
@@ -79,15 +105,35 @@ main_l8:
 txn NumAppArgs
 int 5
 ==
-assert
 txn Note
 byte "farmers:uv3"
 ==
-assert
+&&
 txna ApplicationArgs 3
 btoi
 int 0
 >
+&&
+txna ApplicationArgs 0
+len
+int 0
+>
+&&
+txna ApplicationArgs 1
+len
+int 0
+>
+&&
+txna ApplicationArgs 2
+len
+int 0
+>
+&&
+txna ApplicationArgs 4
+btoi
+int 0
+>
+&&
 assert
 byte "NAME"
 txna ApplicationArgs 0
